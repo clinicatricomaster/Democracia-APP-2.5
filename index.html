@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Democracia">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Turma Democracia</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyD1WdX4dy0maYO63DB5fk4mukjMakssKio",
+    authDomain:        "democracia-3db6d.firebaseapp.com",
+    projectId:         "democracia-3db6d",
+    storageBucket:     "democracia-3db6d.firebasestorage.app",
+    messagingSenderId: "839863168611",
+    appId:             "1:839863168611:web:c773594d608ef1cd5d1256"
+  };
+  const ADMIN_EMAILS = [
+    "eduhermann@gmail.com"
+  ];
+</script>
+
+<style>
+:root {
+  --primary:#111; --accent:#ff6600; --bg:#f0f0ee; --white:#fff; --radius:14px;
+  --invasao:#111; --terrao:#ff6600; --nav-h:64px; --hdr-h:56px;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);font-family:'Barlow',sans-serif;
+  color:var(--primary);height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--primary);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;gap:16px}
+#splash h1{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:900;
+  color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin:0}
+#splash p{color:#666;font-size:.85rem;letter-spacing:2px;margin:0}
+.spinner{width:36px;height:36px;border:3px solid #333;border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LOGIN */
+#login-screen{display:none;position:fixed;inset:0;background:var(--primary);
+  flex-direction:column;align-items:center;justify-content:center;z-index:1000;
+  padding:24px;overflow-y:auto}
+#login-screen.show{display:flex}
+.login-box{width:100%;max-width:360px}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:2.8rem;font-weight:900;
+  color:var(--accent);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:6px}
+.login-sub{text-align:center;color:#555;font-size:.8rem;letter-spacing:2px;
+  margin-bottom:28px;text-transform:uppercase}
+
+/* Botão visitante — destaque total */
+.login-btn-visitor{width:100%;background:var(--white);color:var(--primary);border:none;
+  border-radius:14px;padding:17px;font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;
+  font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(255,255,255,0.15)}
+.login-btn-visitor:active{opacity:.85;transform:scale(.98)}
+
+.login-divider{display:flex;align-items:center;gap:10px;margin:20px 0 14px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
+.login-divider span{color:#444;font-size:.75rem;letter-spacing:1px;font-weight:600;white-space:nowrap}
+
+.login-label{display:block;color:#888;font-size:.75rem;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.login-input{width:100%;background:#1a1a1a;border:2px solid #333;border-radius:10px;
+  color:white;padding:14px 16px;font-size:1rem;font-family:'Barlow',sans-serif;
+  margin-bottom:14px;transition:border-color .2s;-webkit-appearance:none}
+.login-input:focus{outline:none;border-color:var(--accent)}
+.login-input::placeholder{color:#555}
+.login-btn-admin{width:100%;background:#333;color:#aaa;border:2px solid #444;
+  border-radius:12px;padding:14px;font-family:'Barlow Condensed',sans-serif;
+  font-size:1.1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:.15s;margin-top:4px}
+.login-btn-admin:active{opacity:.8;transform:scale(.98)}
+.login-err{color:#ff4444;font-size:.85rem;text-align:center;margin-top:10px;min-height:20px;font-weight:600}
+
+/* INSTALL BANNER */
+#install-banner{display:none;position:fixed;top:0;left:0;right:0;background:var(--accent);
+  color:white;padding:12px 16px;z-index:500;align-items:center;gap:10px;
+  box-shadow:0 4px 16px rgba(0,0,0,.3)}
+#install-banner.show{display:flex}
+#install-banner p{flex:1;margin:0;font-family:'Barlow Condensed',sans-serif;font-size:1rem;
+  font-weight:700;letter-spacing:.5px;line-height:1.3}
+#install-banner p small{font-weight:400;font-size:.8rem;display:block;opacity:.85}
+.banner-btn{background:white;color:var(--accent);border:none;border-radius:8px;padding:8px 14px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;cursor:pointer;white-space:nowrap}
+.banner-close{background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;opacity:.8}
+
+/* OFFLINE */
+#offline-badge{display:none;position:fixed;top:calc(var(--hdr-h) + var(--safe-top) + 6px);
+  left:50%;transform:translateX(-50%);background:#333;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;font-size:.85rem;
+  padding:5px 14px;border-radius:20px;z-index:200;letter-spacing:.5px}
+#offline-badge.show{display:block}
+
+/* HEADER */
+.app-header{position:fixed;top:0;left:0;right:0;
+  height:calc(var(--hdr-h) + var(--safe-top));padding-top:var(--safe-top);
+  background:var(--primary);border-bottom:3px solid var(--accent);
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:16px;padding-right:16px;z-index:100}
+.app-header h1{font-family:'Barlow Condensed',sans-serif;font-size:1.55rem;font-weight:900;
+  color:var(--accent);margin:0;letter-spacing:2px;text-transform:uppercase}
+.header-right{display:flex;gap:6px;align-items:center}
+.btn-icon{background:rgba(255,255,255,.08);border:none;color:white;font-size:1.1rem;
+  width:36px;height:36px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .2s}
+.btn-icon:active{background:var(--accent)}
+.admin-badge{background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;
+  font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:1px;text-transform:uppercase}
+.viewer-badge{background:#333;color:#aaa;font-family:'Barlow Condensed',sans-serif;
+  font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:1px;text-transform:uppercase}
+
+/* BODY */
+.app-body{padding-top:calc(var(--hdr-h) + var(--safe-top) + 12px);
+  padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);min-height:100vh}
+.screen{display:none;padding:0 12px;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav-h) + var(--safe-bottom));background:var(--primary);
+  border-top:3px solid var(--accent);display:flex;align-items:flex-start;padding-top:6px;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;padding:6px 4px;color:#555;transition:color .2s;
+  font-family:'Barlow Condensed',sans-serif;font-size:.7rem;letter-spacing:.5px;
+  text-transform:uppercase;font-weight:700;position:relative}
+.nav-icon{font-size:1.5rem;line-height:1}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active::after{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  width:32px;height:3px;background:var(--accent);border-radius:0 0 3px 3px}
+.nav-btn:active{opacity:.7}
+.nav-btn.admin-only{display:none}
+.nav-btn.admin-only.visible{display:flex}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);padding:16px;
+  margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--accent);
+  padding-bottom:6px;margin:0 0 14px 0}
+
+/* PLACAR */
+.placar-hero{background:var(--primary);border-radius:var(--radius);padding:20px 14px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
+.ph-team{flex:1;text-align:center}
+.ph-name{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:800;
+  color:white;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px}
+.ph-name.orange{color:var(--accent)}
+.ph-score-input{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);
+  border-radius:10px;color:white;font-family:'Barlow Condensed',sans-serif;
+  font-size:2.2rem;font-weight:900;text-align:center;width:72px;padding:8px 4px;
+  -moz-appearance:textfield}
+.ph-score-input::-webkit-inner-spin-button,.ph-score-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.ph-score-input:focus{outline:none;border-color:var(--accent)}
+.ph-vs{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--accent)}
+
+/* ESCALAÇÃO / FREQUÊNCIA */
+.escal-section{margin-bottom:12px}
+.escal-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:1px;padding:9px 12px;border-radius:8px 8px 0 0;color:white}
+.escal-title.inv{background:var(--invasao)}
+.escal-title.ter{background:var(--terrao)}
+.escal-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#eee;
+  border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.escal-player{background:white;padding:10px 10px;
+  display:flex;align-items:center;justify-content:space-between;gap:6px}
+.escal-name{font-size:.88rem;font-weight:600;flex:1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.escal-toggle{display:flex;gap:4px;flex-shrink:0}
+.toggle-btn{width:34px;height:34px;border-radius:8px;border:2px solid #e0e0e0;
+  background:white;font-size:1rem;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:.15s}
+.toggle-btn.active-yes{background:#e8f8ee;border-color:#27ae60}
+.toggle-btn.active-no{background:#fdecea;border-color:#e74c3c}
+.toggle-btn:active{transform:scale(.92)}
+
+/* TABLES */
+.class-table{width:100%;border-collapse:collapse}
+.class-table th{background:#1a1a1a;color:var(--accent);padding:9px 6px;
+  font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;
+  letter-spacing:.5px;text-align:center}
+.class-table td{padding:11px 6px;text-align:center;font-weight:600;
+  font-size:.9rem;border-bottom:1px solid #f0f0f0}
+.class-table tr:last-child td{border-bottom:none}
+.td-left{text-align:left!important}
+.cor-invasao{color:var(--invasao)!important;font-weight:700}
+.cor-terrao{color:var(--terrao)!important;font-weight:700}
+
+/* STAT ROWS */
+.stat-row{display:flex;align-items:center;padding:12px 0;
+  border-bottom:1px solid #f0f0f0;gap:10px}
+.stat-row:last-child{border-bottom:none}
+.stat-rank{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;
+  color:#ccc;width:22px;text-align:center;flex-shrink:0}
+.stat-rank.gold{color:#f0b429}.stat-rank.silver{color:#9aa5b4}.stat-rank.bronze{color:#c47f17}
+.stat-info{flex:1;min-width:0}
+.stat-name{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-sub{font-size:.75rem;color:#999;margin-top:1px;font-weight:500}
+.stat-values{display:flex;gap:12px;align-items:center;flex-shrink:0}
+.stat-val{text-align:center;min-width:32px}
+.stat-val-num{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:900;line-height:1}
+.stat-val-label{font-size:.6rem;color:#aaa;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+
+/* RESULTADO */
+.resultado-item{padding:12px 0;border-bottom:1px solid #f0f0f0}
+.resultado-item:last-child{border-bottom:none}
+.res-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.res-round{font-size:.75rem;color:#aaa;font-weight:600;letter-spacing:.5px}
+.res-actions{display:flex;gap:6px}
+.res-placar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.res-team{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;text-transform:uppercase}
+.res-score{background:#111;color:white;font-family:'Barlow Condensed',sans-serif;
+  font-size:1.1rem;font-weight:900;padding:3px 10px;border-radius:5px}
+.res-x{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#ccc}
+
+/* FORMS */
+.form-label{display:block;font-weight:600;font-size:.75rem;letter-spacing:.5px;
+  margin-bottom:5px;color:#777;text-transform:uppercase}
+.form-input{border:2px solid #e8e8e8;border-radius:10px;padding:13px 14px;width:100%;
+  font-family:'Barlow',sans-serif;font-size:1rem;background:#fafafa;color:var(--primary);
+  transition:border-color .2s;-webkit-appearance:none}
+.form-input:focus{outline:none;border-color:var(--accent);background:white}
+.field{margin-bottom:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn-primary{background:var(--accent);color:white;border:none;border-radius:12px;
+  padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;width:100%;cursor:pointer;transition:.15s}
+.btn-primary:active{opacity:.8;transform:scale(.98)}
+.btn-secondary{background:#222;color:white;border:none;border-radius:12px;padding:13px;
+  font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;width:100%;cursor:pointer;margin-top:10px}
+.btn-secondary:active{opacity:.8}
+.btn-mini{padding:6px 10px;border:1px solid #ddd;border-radius:7px;
+  background:white;font-size:.85rem;cursor:pointer}
+.btn-mini:active{background:#f0f0f0}
+
+/* PLAYER ROWS */
+.player-item{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid #f0f0f0}
+.player-item:last-child{border-bottom:none}
+.player-name{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700}
+.pos-tag{display:inline-block;background:#eee;color:#666;font-size:.65rem;
+  font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:.5px}
+.player-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* GOLEIROS */
+.gol-card{background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px}
+.gol-card-header{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;
+  margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #eee;text-transform:uppercase;letter-spacing:1px}
+.gol-row-item{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #eee}
+.gol-row-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.gol-row-name{font-size:.85rem;font-weight:600;margin-bottom:6px;color:#444}
+.gol-row-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* GOL AUTOR */
+.gol-autor-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;
+  background:#f8f8f8;border-radius:10px;padding:8px 10px}
+.gol-autor-row select{flex:3}
+.gol-autor-row input{flex:1;min-width:50px}
+.remove-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:0 2px;flex-shrink:0}
+
+/* MISC */
+.sync-row{display:flex;align-items:center;gap:6px;font-size:.75rem;color:#aaa;font-weight:600}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#aaa;flex-shrink:0}
+.sync-dot.green{background:#27ae60}.sync-dot.orange{background:var(--accent)}
+.section-label{font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:#aaa;margin:18px 0 8px 2px}
+.toast{position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;
+  padding:12px 20px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;
+  font-size:1rem;letter-spacing:.5px;white-space:nowrap;z-index:300;opacity:0;
+  transition:all .3s cubic-bezier(.22,.68,0,1.2);border-left:3px solid var(--accent);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;color:#bbb;padding:24px 0;
+  font-family:'Barlow Condensed',sans-serif;font-size:1rem;letter-spacing:.5px}
+hr{border:none;border-top:1px solid #eee;margin:16px 0}
+
+/* FREQ PILL — frequência na lista de jogadores */
+.freq-pill{display:inline-flex;align-items:baseline;gap:1px;
+  background:#f0f4ff;color:#3a7bd5;font-family:'Barlow Condensed',sans-serif;
+  font-size:.95rem;font-weight:800;padding:3px 9px;border-radius:20px;
+  white-space:nowrap;flex-shrink:0}
+.freq-pill .freq-total{font-size:.75rem;font-weight:600;opacity:.6}
+.freq-pill.zero{background:#f5f5f5;color:#ccc}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1>⚽ Democracia</h1>
+  <div class="spinner"></div>
+  <p>CARREGANDO...</p>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⚽ Democracia</div>
+    <div class="login-sub">Turma Democracia FC</div>
+
+    <!-- BOTÃO VISITANTE — destaque principal -->
+    <button class="login-btn-visitor" onclick="entrarComoVisitante()">
+      👁️ VER O CAMPEONATO
+    </button>
+
+    <div class="login-divider"><span>acesso administrativo</span></div>
+
+    <label class="login-label">E-mail</label>
+    <input type="email" id="login-email" class="login-input" placeholder="seu@email.com" autocomplete="email">
+    <label class="login-label">Senha</label>
+    <input type="password" id="login-senha" class="login-input" placeholder="••••••••" autocomplete="current-password">
+    <button class="login-btn-admin" onclick="fazerLogin()">🔑 ENTRAR COMO ADMIN</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <p>⚽ Instalar app<small>Acesso rápido na tela inicial</small></p>
+  <button class="banner-btn" id="btn-install">INSTALAR</button>
+  <button class="banner-close" onclick="closeBanner()">✕</button>
+</div>
+
+<div id="offline-badge">📵 Sem conexão</div>
+
+<!-- HEADER -->
+<header class="app-header">
+  <h1>⚽ Democracia</h1>
+  <div class="header-right">
+    <span id="role-badge" class="viewer-badge">VISITANTE</span>
+    <button class="btn-icon" id="btn-logout" onclick="fazerLogout()" title="Sair" style="display:none">🚪</button>
+  </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- DASHBOARD -->
+  <div id="screen-dash" class="screen active">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title" style="border:none;margin:0;padding:0">🏆 Classificação</div>
+        <div class="sync-row">
+          <div class="sync-dot green" id="sync-dot"></div>
+          <span id="sync-text">Ao vivo</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto;margin-top:10px">
+        <table class="class-table">
+          <thead><tr><th>#</th><th style="text-align:left">Time</th><th>J</th><th>Pts</th><th>V</th><th>E</th><th>D</th><th>GM</th><th>SG</th></tr></thead>
+          <tbody id="body-class"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚽ Artilharia</div>
+      <div id="body-art"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧤 Goleiros</div>
+      <div id="body-gol"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Resultados</div>
+      <div id="body-resultados"></div>
+    </div>
+  </div>
+
+  <!-- NOVA RODADA (admin) -->
+  <div id="screen-rodada" class="screen">
+    <div class="card">
+      <div class="card-title" id="rodada-form-title">Nova Rodada</div>
+      <form id="form-jogo">
+        <input type="hidden" id="edit_jogo_id">
+        <div class="row2">
+          <div class="field">
+            <label class="form-label">Nº Rodada</label>
+            <input type="number" id="rod_num" class="form-input" placeholder="Ex: 1" min="1" required>
+          </div>
+          <div class="field">
+            <label class="form-label">Data</label>
+            <input type="date" id="rod_data" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="placar-hero">
+          <div class="ph-team">
+            <span class="ph-name">Invasão</span>
+            <input type="number" id="p_inv" class="ph-score-input" placeholder="0" min="0">
+          </div>
+          <div class="ph-vs">X</div>
+          <div class="ph-team">
+            <span class="ph-name orange">Terrão</span>
+            <input type="number" id="p_ter" class="ph-score-input" placeholder="0" min="0">
+          </div>
+        </div>
+
+        <div class="section-label">Escalação e Frequência</div>
+        <div id="escal-area"></div>
+
+        <div class="section-label">Goleiros em Campo</div>
+        <div id="goleiros-inputs-area"></div>
+
+        <div class="section-label">Autores dos Gols</div>
+        <div id="gols-inputs-area"></div>
+        <button type="button" onclick="addGolRow()" class="btn-secondary">+ Adicionar Gol</button>
+
+        <hr>
+        <button type="submit" class="btn-primary">SALVAR RODADA</button>
+        <button type="button" id="btn-cancelar-rod" onclick="cancelarEditRod()"
+          class="btn-secondary" style="display:none;background:#888;margin-top:8px">CANCELAR</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="card-title">Histórico</div>
+      <div id="body-historico"></div>
+    </div>
+  </div>
+
+  <!-- JOGADORES (admin) -->
+  <div id="screen-jogadores" class="screen">
+    <div class="card">
+      <div class="card-title" id="jogador-form-title">Cadastrar Atleta</div>
+      <form id="form-jogador">
+        <input type="hidden" id="edit_jog_id">
+        <div class="field">
+          <label class="form-label">Nome</label>
+          <input type="text" id="j_nome" class="form-input" placeholder="Nome do atleta" required>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label class="form-label">Time</label>
+            <select id="j_time" class="form-input">
+              <option value="Invasão">Invasão</option>
+              <option value="Terrão">Terrão</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="form-label">Posição</label>
+            <select id="j_pos" class="form-input">
+              <option value="G">Goleiro (G)</option>
+              <option value="DF">Defesa (DF)</option>
+              <option value="MC">Meio Campo (MC)</option>
+              <option value="AT">Ataque (AT)</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">SALVAR ATLETA</button>
+        <button type="button" id="btn-cancelar-jog" onclick="cancelarEditJog()"
+          class="btn-secondary" style="display:none;background:#888;margin-top:8px">CANCELAR</button>
+      </form>
+    </div>
+    <div class="section-label" style="padding:0 2px">Invasão</div>
+    <div class="card"><div id="lista-inv"><div class="empty">Nenhum atleta</div></div></div>
+    <div class="section-label" style="padding:0 2px;color:var(--accent)">Terrão</div>
+    <div class="card"><div id="lista-ter"><div class="empty">Nenhum atleta</div></div></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="showScreen('dash',this)">
+    <span class="nav-icon">📊</span>Dashboard
+  </button>
+  <button class="nav-btn admin-only" id="nav-rodada" onclick="showScreen('rodada',this)">
+    <span class="nav-icon">⚽</span>Rodada
+  </button>
+  <button class="nav-btn admin-only" id="nav-jogadores" onclick="showScreen('jogadores',this)">
+    <span class="nav-icon">👥</span>Jogadores
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp }                     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged }       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc,
+         onSnapshot, addDoc, setDoc,
+         deleteDoc, query, orderBy }         from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app  = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const colJogadores = collection(db,'jogadores');
+const colRodadas   = collection(db,'rodadas');
+
+let isAdmin=false, jogadores=[], rodadas=[], unsubJog=null, unsubRod=null;
+// escFreq: { [firestoreId]: true | false | null }
+let escFreq = {};
+
+// ── SW ────────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// ── INSTALL ───────────────────────────────────────────────────────────
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('btn-install').addEventListener('click',()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(c=>{
+    if(c.outcome==='accepted')showToast('✅ App instalado!');
+    deferredPrompt=null; closeBanner();
+  });
+});
+window.addEventListener('appinstalled',()=>{closeBanner();showToast('🎉 App instalado!');});
+window.closeBanner=()=>document.getElementById('install-banner').classList.remove('show');
+
+// ── ONLINE/OFFLINE ────────────────────────────────────────────────────
+function updateOnline(){
+  const dot=document.getElementById('sync-dot'), txt=document.getElementById('sync-text');
+  const badge=document.getElementById('offline-badge');
+  if(!navigator.onLine){ badge.classList.add('show'); dot.className='sync-dot orange'; txt.textContent='Offline'; }
+  else{ badge.classList.remove('show'); dot.className='sync-dot green'; txt.textContent='Ao vivo'; }
+}
+window.addEventListener('online',updateOnline);
+window.addEventListener('offline',updateOnline);
+updateOnline();
+
+// ── AUTH ──────────────────────────────────────────────────────────────
+onAuthStateChanged(auth,user=>{
+  document.getElementById('splash').style.display='none';
+  if(user){
+    isAdmin=ADMIN_EMAILS.map(e=>e.toLowerCase()).includes(user.email.toLowerCase());
+    aplicarPerfil(isAdmin); iniciarListeners();
+  } else {
+    pararListeners();
+    document.getElementById('login-screen').classList.add('show');
+  }
+});
+
+function aplicarPerfil(admin){
+  document.getElementById('login-screen').classList.remove('show');
+  isAdmin=admin;
+  const rb=document.getElementById('role-badge'), bl=document.getElementById('btn-logout');
+  const nr=document.getElementById('nav-rodada'), nj=document.getElementById('nav-jogadores');
+  if(admin){
+    document.body.classList.add('is-admin');
+    rb.textContent='ADMIN'; rb.className='admin-badge';
+    bl.style.display='flex'; nr.classList.add('visible'); nj.classList.add('visible');
+  } else {
+    document.body.classList.remove('is-admin');
+    rb.textContent='VISITANTE'; rb.className='viewer-badge';
+    bl.style.display='none'; nr.classList.remove('visible'); nj.classList.remove('visible');
+  }
+}
+
+window.fazerLogin=async()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const senha=document.getElementById('login-senha').value;
+  const errEl=document.getElementById('login-err');
+  errEl.textContent='';
+  if(!email||!senha){errEl.textContent='Preencha e-mail e senha.';return;}
+  try{ await signInWithEmailAndPassword(auth,email,senha); }
+  catch(e){
+    const m={'auth/user-not-found':'E-mail não cadastrado.','auth/wrong-password':'Senha incorreta.',
+      'auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas.',
+      'auth/invalid-credential':'E-mail ou senha incorretos.'};
+    errEl.textContent=m[e.code]||'Erro ao entrar.';
+  }
+};
+
+window.entrarComoVisitante=()=>{
+  document.getElementById('login-screen').classList.remove('show');
+  aplicarPerfil(false); iniciarListeners();
+};
+
+window.fazerLogout=async()=>{
+  if(!confirm('Sair da conta admin?'))return;
+  await signOut(auth);
+  pararListeners(); jogadores=[]; rodadas=[];
+  atualizarTudo();
+  document.getElementById('login-screen').classList.add('show');
+  showToast('👋 Saiu da conta admin');
+};
+
+// ── LISTENERS ─────────────────────────────────────────────────────────
+function iniciarListeners(){
+  pararListeners();
+  unsubJog=onSnapshot(query(colJogadores,orderBy('nome')),snap=>{
+    jogadores=snap.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    renderJogadores(); renderArtilharia(); renderGoleiros();
+    carregarEscalacao(); carregarInputsGoleiros();
+  },err=>console.warn('Jogadores:',err));
+  unsubRod=onSnapshot(query(colRodadas,orderBy('num','desc')),snap=>{
+    rodadas=snap.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    renderJogadores(); renderClassificacao(); renderArtilharia(); renderGoleiros(); renderResultados();
+  },err=>console.warn('Rodadas:',err));
+}
+function pararListeners(){
+  if(unsubJog){unsubJog();unsubJog=null;}
+  if(unsubRod){unsubRod();unsubRod=null;}
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+window.fmtData=s=>{if(!s)return'';const p=s.split('-');return`${p[2]}/${p[1]}/${p[0]}`;};
+window.showScreen=(id,btn)=>{
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='rodada'){carregarEscalacao();carregarInputsGoleiros();}
+};
+let _tt;
+window.showToast=msg=>{
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2600);
+};
+
+// ── JOGADORES ─────────────────────────────────────────────────────────
+document.getElementById('form-jogador').onsubmit=async function(e){
+  e.preventDefault();
+  if(!isAdmin){showToast('⛔ Apenas admins');return;}
+  const fid=document.getElementById('edit_jog_id').value;
+  const nome=document.getElementById('j_nome').value.trim();
+  if(!nome){showToast('⚠️ Informe o nome!');return;}
+  const data={nome,time:document.getElementById('j_time').value,posicao:document.getElementById('j_pos').value};
+  try{
+    if(fid){await setDoc(doc(db,'jogadores',fid),data);showToast('✅ Atleta atualizado!');cancelarEditJog();}
+    else{await addDoc(colJogadores,data);showToast('✅ Atleta cadastrado!');e.target.reset();}
+    document.getElementById('edit_jog_id').value='';
+  }catch(err){showToast('❌ Erro: '+err.message);}
+};
+window.cancelarEditJog=()=>{
+  document.getElementById('edit_jog_id').value='';
+  document.getElementById('form-jogador').reset();
+  document.getElementById('jogador-form-title').textContent='Cadastrar Atleta';
+  document.getElementById('btn-cancelar-jog').style.display='none';
+};
+function renderJogadores(){
+  // Frequência total por jogador em todas as rodadas
+  const freqTotal={};
+  rodadas.forEach(r=>{
+    if(!r.frequencia)return;
+    Object.entries(r.frequencia).forEach(([jid,jogou])=>{
+      if(!freqTotal[jid])freqTotal[jid]={sim:0,nao:0};
+      if(jogou)freqTotal[jid].sim++; else freqTotal[jid].nao++;
+    });
+  });
+  ['Invasão','Terrão'].forEach(t=>{
+    const el=document.getElementById(t==='Invasão'?'lista-inv':'lista-ter');
+    const lista=jogadores.filter(j=>j.time===t);
+    if(!lista.length){el.innerHTML='<div class="empty">Nenhum atleta</div>';return;}
+    el.innerHTML=lista.map(j=>{
+      const cor=t==='Invasão'?'cor-invasao':'cor-terrao';
+      const f=freqTotal[j.firestoreId];
+      const total=f?f.sim+f.nao:0;
+      const freqHtml=total>0
+        ? `<span class="freq-pill">⚽ ${f.sim}<span class="freq-total">/${total}</span></span>`
+        : `<span class="freq-pill zero">—</span>`;
+      return`<div class="player-item">
+        <div style="flex:1;min-width:0">
+          <span class="player-name ${cor}">${j.nome}</span>
+          <span class="pos-tag">${j.posicao}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          ${freqHtml}
+          <div class="player-actions" style="display:${isAdmin?'flex':'none'}">
+            <button class="btn-mini" onclick="editJog('${j.firestoreId}')">✏️</button>
+            <button class="btn-mini" onclick="delJog('${j.firestoreId}')">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+window.editJog=fid=>{
+  const j=jogadores.find(x=>x.firestoreId===fid);
+  document.getElementById('edit_jog_id').value=j.firestoreId;
+  document.getElementById('j_nome').value=j.nome;
+  document.getElementById('j_time').value=j.time;
+  document.getElementById('j_pos').value=j.posicao;
+  document.getElementById('jogador-form-title').textContent='Editar Atleta';
+  document.getElementById('btn-cancelar-jog').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+window.delJog=async fid=>{
+  if(!isAdmin||!confirm('Remover atleta?'))return;
+  try{await deleteDoc(doc(db,'jogadores',fid));showToast('🗑️ Atleta removido!');}
+  catch(err){showToast('❌ Erro: '+err.message);}
+};
+
+// ── ESCALAÇÃO / FREQUÊNCIA ────────────────────────────────────────────
+function carregarEscalacao(freqExistente={}){
+  escFreq={};
+  jogadores.forEach(j=>{ escFreq[j.firestoreId]=freqExistente[j.firestoreId]??null; });
+  renderEscalacao();
+}
+function renderEscalacao(){
+  const area=document.getElementById('escal-area');
+  if(!area)return;
+  area.innerHTML='';
+  ['Invasão','Terrão'].forEach(t=>{
+    const lista=jogadores.filter(j=>j.time===t);
+    if(!lista.length)return;
+    const cc=t==='Invasão'?'inv':'ter';
+    let h=`<div class="escal-section">
+      <div class="escal-title ${cc}">${t.toUpperCase()}</div>
+      <div class="escal-grid">`;
+    lista.forEach(j=>{
+      const v=escFreq[j.firestoreId];
+      const sy=v===true?'active-yes':'', sn=v===false?'active-no':'';
+      h+=`<div class="escal-player">
+        <span class="escal-name">${j.nome}</span>
+        <div class="escal-toggle">
+          <button type="button" class="toggle-btn ${sy}" onclick="marcarFreq('${j.firestoreId}',true)" title="Jogou">✅</button>
+          <button type="button" class="toggle-btn ${sn}" onclick="marcarFreq('${j.firestoreId}',false)" title="Não jogou">❌</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+    area.innerHTML+=h;
+  });
+}
+window.marcarFreq=(fid,valor)=>{
+  escFreq[fid]=escFreq[fid]===valor?null:valor; // toggle
+  renderEscalacao();
+};
+
+// ── GOLEIROS EM CAMPO ─────────────────────────────────────────────────
+function carregarInputsGoleiros(golInfoExistente=[]){
+  const area=document.getElementById('goleiros-inputs-area');
+  if(!area)return;
+  area.innerHTML='';
+  ['Invasão','Terrão'].forEach(t=>{
+    const gols=jogadores.filter(j=>j.time===t&&j.posicao==='G');
+    const cor=t==='Invasão'?'cor-invasao':'cor-terrao';
+    let h=`<div class="gol-card"><div class="gol-card-header ${cor}">${t}</div>`;
+    if(!gols.length){h+=`<div style="color:#bbb;font-size:.85rem;padding:4px 0">Nenhum goleiro</div>`;}
+    else{
+      gols.forEach(g=>{
+        const ex=golInfoExistente.find(x=>x.jogadorId===g.firestoreId);
+        h+=`<div class="gol-row-item">
+          <div class="gol-row-name">${g.nome}</div>
+          <div class="gol-row-inputs">
+            <div><label class="form-label">Tempo</label>
+              <select class="g-tempo form-input" data-id="${g.firestoreId}" style="padding:10px 8px">
+                <option value="0" ${!ex?'selected':''}>Não jogou</option>
+                <option value="0.5" ${ex?.tempo===.5?'selected':''}>Meio jogo</option>
+                <option value="1" ${ex?.tempo===1?'selected':''}>Jogo inteiro</option>
+              </select></div>
+            <div><label class="form-label">Gols sofridos</label>
+              <input type="number" class="g-sofridos form-input" data-id="${g.firestoreId}"
+                placeholder="0" min="0" value="${ex?.gols??''}"></div>
+          </div></div>`;
+      });
+    }
+    h+=`</div>`; area.innerHTML+=h;
+  });
+}
+
+// ── GOLS ──────────────────────────────────────────────────────────────
+window.addGolRow=(atletaId='',qtd=1)=>{
+  const div=document.createElement('div');
+  div.className='gol-autor-row';
+  // Prioriza quem marcou presença; se nenhum marcou, mostra todos
+  const comFreq=jogadores.filter(j=>escFreq[j.firestoreId]===true);
+  const lista=(comFreq.length>0?comFreq:[...jogadores]).sort((a,b)=>a.nome.localeCompare(b.nome));
+  // Quando é novo (sem atletaId), começa com placeholder vazio
+  const placeholder=atletaId?'':`<option value="" disabled selected style="color:#aaa">— Selecionar jogador —</option>`;
+  div.innerHTML=`
+    <select class="gol-atleta form-input" style="flex:3;padding:10px 8px">
+      ${placeholder}
+      ${lista.map(j=>`<option value="${j.firestoreId}" ${j.firestoreId===atletaId?'selected':''}>${j.nome} (${j.time.slice(0,3)})</option>`).join('')}
+    </select>
+    <input type="number" class="gol-qtd form-input" value="${qtd}" min="1" style="flex:1;padding:10px 8px;text-align:center">
+    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">❌</button>`;
+  document.getElementById('gols-inputs-area').appendChild(div);
+};
+
+// ── SALVAR RODADA ─────────────────────────────────────────────────────
+document.getElementById('form-jogo').onsubmit=async function(e){
+  e.preventDefault();
+  if(!isAdmin){showToast('⛔ Apenas admins');return;}
+  const fid=document.getElementById('edit_jogo_id').value;
+  const numVal=parseInt(document.getElementById('rod_num').value);
+  const pInv=parseInt(document.getElementById('p_inv').value);
+  const pTer=parseInt(document.getElementById('p_ter').value);
+  if(!numVal||numVal<1){showToast('⚠️ Nº inválido!');return;}
+  if(isNaN(pInv)||isNaN(pTer)||pInv<0||pTer<0){showToast('⚠️ Placar inválido!');return;}
+
+  const rodDup=rodadas.find(x=>x.num===numVal&&x.firestoreId!==fid);
+  if(rodDup&&!confirm(`Rodada ${numVal} já existe. Sobrescrever?`))return;
+  if(rodDup){try{await deleteDoc(doc(db,'rodadas',rodDup.firestoreId));}catch(err){}}
+
+  // Frequência: salva só os marcados
+  const frequencia={};
+  Object.entries(escFreq).forEach(([id,val])=>{ if(val!==null) frequencia[id]=val; });
+
+  const r={
+    num:numVal, data:document.getElementById('rod_data').value,
+    p_inv:pInv, p_ter:pTer, frequencia,
+    goleiros_info:[], gols:[]
+  };
+
+  document.querySelectorAll('.g-tempo').forEach(sel=>{
+    const tid=sel.dataset.id, tempo=parseFloat(sel.value);
+    const sofEl=document.querySelector(`.g-sofridos[data-id="${tid}"]`);
+    const gols=sofEl?(parseInt(sofEl.value)||0):0;
+    if(tempo>0) r.goleiros_info.push({jogadorId:tid,tempo,gols});
+  });
+  document.querySelectorAll('.gol-autor-row').forEach(row=>{
+    const qtd=parseInt(row.querySelector('.gol-qtd').value);
+    if(qtd>0) r.gols.push({atletaId:row.querySelector('.gol-atleta').value,qtd});
+  });
+
+  try{
+    if(fid){await setDoc(doc(db,'rodadas',fid),r);showToast('✅ Rodada atualizada!');}
+    else{await addDoc(colRodadas,r);showToast('✅ Rodada salva!');}
+    e.target.reset();
+    document.getElementById('gols-inputs-area').innerHTML='';
+    document.getElementById('edit_jogo_id').value='';
+    document.getElementById('rodada-form-title').textContent='Nova Rodada';
+    document.getElementById('btn-cancelar-rod').style.display='none';
+    escFreq={}; carregarEscalacao(); carregarInputsGoleiros();
+  }catch(err){showToast('❌ Erro: '+err.message);}
+};
+
+window.cancelarEditRod=()=>{
+  document.getElementById('edit_jogo_id').value='';
+  document.getElementById('form-jogo').reset();
+  document.getElementById('gols-inputs-area').innerHTML='';
+  document.getElementById('rodada-form-title').textContent='Nova Rodada';
+  document.getElementById('btn-cancelar-rod').style.display='none';
+  escFreq={}; carregarEscalacao(); carregarInputsGoleiros();
+};
+
+// ── EDITAR / EXCLUIR RODADA ───────────────────────────────────────────
+window.editRodada=fid=>{
+  if(!isAdmin||!confirm('Editar esta rodada?'))return;
+  const r=rodadas.find(x=>x.firestoreId===fid);
+  document.getElementById('nav-rodada').click();
+  setTimeout(()=>{
+    document.getElementById('edit_jogo_id').value=r.firestoreId;
+    document.getElementById('rod_num').value=r.num;
+    document.getElementById('rod_data').value=r.data;
+    document.getElementById('p_inv').value=r.p_inv;
+    document.getElementById('p_ter').value=r.p_ter;
+    document.getElementById('rodada-form-title').textContent='Editar Rodada '+r.num;
+    document.getElementById('btn-cancelar-rod').style.display='block';
+    carregarEscalacao(r.frequencia||{});
+    carregarInputsGoleiros(r.goleiros_info||[]);
+    document.getElementById('gols-inputs-area').innerHTML='';
+    r.gols.forEach(g=>addGolRow(g.atletaId,g.qtd));
+    showToast('✏️ Editando Rodada '+r.num);
+  },80);
+};
+window.delRodada=async fid=>{
+  if(!isAdmin||!confirm('Remover rodada?'))return;
+  try{await deleteDoc(doc(db,'rodadas',fid));showToast('🗑️ Rodada removida!');}
+  catch(err){showToast('❌ Erro: '+err.message);}
+};
+
+// ── RENDERS ───────────────────────────────────────────────────────────
+function atualizarTudo(){
+  renderJogadores();renderClassificacao();renderArtilharia();renderGoleiros();renderResultados();
+}
+
+function renderClassificacao(){
+  let s={'Invasão':{j:0,pts:0,v:0,e:0,d:0,gp:0,gc:0},'Terrão':{j:0,pts:0,v:0,e:0,d:0,gp:0,gc:0}};
+  rodadas.forEach(r=>{
+    s['Invasão'].j++;s['Terrão'].j++;
+    s['Invasão'].gp+=r.p_inv;s['Invasão'].gc+=r.p_ter;
+    s['Terrão'].gp+=r.p_ter;s['Terrão'].gc+=r.p_inv;
+    if(r.p_inv>r.p_ter){s['Invasão'].pts+=3;s['Invasão'].v++;s['Terrão'].d++;}
+    else if(r.p_ter>r.p_inv){s['Terrão'].pts+=3;s['Terrão'].v++;s['Invasão'].d++;}
+    else{s['Invasão'].pts++;s['Terrão'].pts++;s['Invasão'].e++;s['Terrão'].e++;}
+  });
+  const times=Object.keys(s).map(t=>({t,...s[t]})).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc));
+  const bc=document.getElementById('body-class');
+  if(!rodadas.length){bc.innerHTML=`<tr><td colspan="9"><div class="empty">Nenhuma rodada</div></td></tr>`;return;}
+  bc.innerHTML=times.map((d,i)=>{
+    const cor=d.t==='Invasão'?'cor-invasao':'cor-terrao';
+    const sg=d.gp-d.gc;
+    const sgColor=sg>0?'color:#27ae60':sg<0?'color:#e74c3c':'';
+    return`<tr><td>${['🥇','🥈'][i]||i+1}</td>
+      <td class="td-left ${cor}" style="text-transform:uppercase">${d.t}</td>
+      <td>${d.j}</td><td><strong>${d.pts}</strong></td>
+      <td>${d.v}</td><td>${d.e}</td><td>${d.d}</td>
+      <td>${d.gp}</td>
+      <td style="${sgColor}"><strong>${sg>0?'+':''}${sg}</strong></td></tr>`;
+  }).join('');
+}
+
+function renderArtilharia(){
+  // Agrega gols e frequência por jogador
+  let art={};
+  rodadas.forEach(r=>{
+    // contabiliza gols
+    r.gols.forEach(g=>{
+      if(!art[g.atletaId])art[g.atletaId]={gols:0,freq:0};
+      art[g.atletaId].gols+=g.qtd;
+    });
+    // contabiliza frequência (compareceu = true)
+    if(r.frequencia){
+      Object.entries(r.frequencia).forEach(([jid,jogou])=>{
+        if(!art[jid])art[jid]={gols:0,freq:0};
+        if(jogou)art[jid].freq++;
+      });
+    }
+  });
+  const lista=Object.keys(art)
+    .filter(id=>art[id].gols>0)
+    .map(id=>{
+      const j=jogadores.find(x=>x.firestoreId===id);
+      return{id,nome:j?.nome||'?',time:j?.time||'?',gols:art[id].gols,freq:art[id].freq};
+    })
+    .sort((a,b)=>{
+      if(b.gols!==a.gols)return b.gols-a.gols;          // 1º: mais gols
+      if(b.freq!==a.freq)return b.freq-a.freq;          // 2º: mais frequência
+      return a.nome.localeCompare(b.nome);              // 3º: alfabético
+    });
+  const el=document.getElementById('body-art');
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhum gol registrado</div>';return;}
+  el.innerHTML=lista.map((l,i)=>{
+    const cor=l.time==='Invasão'?'cor-invasao':'cor-terrao';
+    const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return`<div class="stat-row">
+      <div class="stat-rank ${rc}">${i+1}</div>
+      <div class="stat-info">
+        <div class="stat-name ${cor}">${l.nome}</div>
+        <div class="stat-sub">${l.time}</div>
+      </div>
+      <div class="stat-values">
+        <div class="stat-val"><div class="stat-val-num">${l.gols}</div><div class="stat-val-label">Gols</div></div>
+        <div class="stat-val"><div class="stat-val-num">${l.freq}</div><div class="stat-val-label">Jogos</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoleiros(){
+  let gst={};
+  rodadas.forEach(r=>r.goleiros_info.forEach(gi=>{
+    if(!gst[gi.jogadorId])gst[gi.jogadorId]={t:0,g:0};
+    gst[gi.jogadorId].t+=gi.tempo; gst[gi.jogadorId].g+=gi.gols;
+  }));
+  const lista=Object.keys(gst).map(id=>{
+    const j=jogadores.find(x=>x.firestoreId===id);
+    const m=gst[id].t>0?gst[id].g/gst[id].t:0;
+    return{nome:j?.nome||'?',time:j?.time||'?',jogos:gst[id].t,gols:gst[id].g,media:m};
+  }).sort((a,b)=>{
+    if(b.jogos!==a.jogos)return b.jogos-a.jogos; // mais jogos primeiro
+    return a.media-b.media;                      // menor média depois
+  });
+  const el=document.getElementById('body-gol');
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhum goleiro registrado</div>';return;}
+  el.innerHTML=lista.map((l,i)=>{
+    const cor=l.time==='Invasão'?'cor-invasao':'cor-terrao';
+    const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return`<div class="stat-row">
+      <div class="stat-rank ${rc}">${i+1}</div>
+      <div class="stat-info">
+        <div class="stat-name ${cor}">${l.nome}</div>
+        <div class="stat-sub">${l.time}</div>
+      </div>
+      <div class="stat-values">
+        <div class="stat-val"><div class="stat-val-num">${l.jogos}</div><div class="stat-val-label">Jogos</div></div>
+        <div class="stat-val"><div class="stat-val-num">${l.gols}</div><div class="stat-val-label">Sofreu</div></div>
+        <div class="stat-val"><div class="stat-val-num">${l.media.toFixed(2)}</div><div class="stat-val-label">Média</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderResultados(){
+  const sorted=[...rodadas].sort((a,b)=>b.num-a.num);
+  const actBtns=fid=>isAdmin?`<div class="res-actions">
+    <button class="btn-mini" onclick="editRodada('${fid}')">✏️</button>
+    <button class="btn-mini" onclick="delRodada('${fid}')">🗑️</button></div>`:'';
+  const build=r=>{
+    const invVenceu=r.p_inv>=r.p_ter, empate=r.p_inv===r.p_ter;
+    const t1n=invVenceu?'Invasão':'Terrão', t2n=invVenceu?'Terrão':'Invasão';
+    const t1s=invVenceu?r.p_inv:r.p_ter,   t2s=invVenceu?r.p_ter:r.p_inv;
+    const t1c=invVenceu?'cor-invasao':'cor-terrao', t2c=invVenceu?'cor-terrao':'cor-invasao';
+    return`<div class="resultado-item">
+      <div class="res-top">
+        <span class="res-round">Rodada ${r.num} — ${fmtData(r.data)}${empate?' · EMPATE':''}</span>
+        ${actBtns(r.firestoreId)}
+      </div>
+      <div class="res-placar">
+        <span class="res-team ${t1c}">${t1n}</span>
+        <span class="res-score" style="${!empate?'background:var(--accent)':''}">${t1s}</span>
+        <span class="res-x">x</span>
+        <span class="res-score">${t2s}</span>
+        <span class="res-team ${t2c}">${t2n}</span>
+      </div>
+    </div>`;
+  };
+  const content=sorted.length?sorted.map(build).join(''):'<div class="empty">Nenhuma rodada</div>';
+  document.getElementById('body-resultados').innerHTML=content;
+  document.getElementById('body-historico').innerHTML=content;
+}
+</script>
+</body>
+</html>
