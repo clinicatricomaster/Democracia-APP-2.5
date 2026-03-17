@@ -296,7 +296,16 @@ hr{border:none;border-top:1px solid #eee;margin:16px 0}
   font-size:.95rem;font-weight:800;padding:3px 9px;border-radius:20px;
   white-space:nowrap;flex-shrink:0}
 .freq-pill .freq-total{font-size:.75rem;font-weight:600;opacity:.6}
+.freq-pill .freq-pct{font-size:.75rem;font-weight:600;color:#5a99e8;margin-left:2px}
 .freq-pill.zero{background:#f5f5f5;color:#ccc}
+
+/* TOGGLE BOTÃO ÚNICO ESCALAÇÃO */
+.toggle-btn-single{width:34px;height:34px;border-radius:8px;border:2px solid #e0e0e0;
+  background:white;font-size:1rem;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.toggle-btn-single.escal-on{background:#e8f8ee;border-color:#27ae60}
+.toggle-btn-single.escal-off{background:#fdecea;border-color:#e74c3c}
+.toggle-btn-single:active{transform:scale(.92)}
 </style>
 </head>
 <body>
@@ -344,7 +353,7 @@ hr{border:none;border-top:1px solid #eee;margin:16px 0}
   <h1>⚽ Democracia</h1>
   <div class="header-right">
     <span id="role-badge" class="viewer-badge">VISITANTE</span>
-    <button class="btn-icon" id="btn-logout" onclick="fazerLogout()" title="Sair" style="display:none">🚪</button>
+    <button class="btn-icon" id="btn-logout" onclick="fazerLogout()" title="Sair" style="display:none">➜</button>
   </div>
 </header>
 
@@ -652,13 +661,15 @@ window.cancelarEditJog=()=>{
   document.getElementById('btn-cancelar-jog').style.display='none';
 };
 function renderJogadores(){
-  // Frequência total por jogador em todas as rodadas
-  const freqTotal={};
+  // Total de rodadas disputadas
+  const totalRodadas=rodadas.length;
+  // Contabiliza escalações (freq===true) por jogador
+  const escalacoes={};
   rodadas.forEach(r=>{
     if(!r.frequencia)return;
     Object.entries(r.frequencia).forEach(([jid,jogou])=>{
-      if(!freqTotal[jid])freqTotal[jid]={sim:0,nao:0};
-      if(jogou)freqTotal[jid].sim++; else freqTotal[jid].nao++;
+      if(!escalacoes[jid])escalacoes[jid]=0;
+      if(jogou)escalacoes[jid]++;
     });
   });
   ['Invasão','Terrão'].forEach(t=>{
@@ -667,10 +678,11 @@ function renderJogadores(){
     if(!lista.length){el.innerHTML='<div class="empty">Nenhum atleta</div>';return;}
     el.innerHTML=lista.map(j=>{
       const cor=t==='Invasão'?'cor-invasao':'cor-terrao';
-      const f=freqTotal[j.firestoreId];
-      const total=f?f.sim+f.nao:0;
-      const freqHtml=total>0
-        ? `<span class="freq-pill">⚽ ${f.sim}<span class="freq-total">/${total}</span></span>`
+      const esc=escalacoes[j.firestoreId]||0;
+      const pct=totalRodadas>0?Math.round(esc/totalRodadas*100):0;
+      const pillColor=pct>=75?'#27ae60':pct>=50?'#3a7bd5':pct>=25?'#e6a817':'#e74c3c';
+      const freqHtml=totalRodadas>0
+        ? `<span class="freq-pill" style="background:${pillColor}18;color:${pillColor};border:1.5px solid ${pillColor}40">${esc}<span class="freq-total">/${totalRodadas}</span>&nbsp;<span class="freq-pct" style="color:${pillColor}">${pct}%</span></span>`
         : `<span class="freq-pill zero">—</span>`;
       return`<div class="player-item">
         <div style="flex:1;min-width:0">
@@ -715,61 +727,76 @@ function renderEscalacao(){
   if(!area)return;
   area.innerHTML='';
   ['Invasão','Terrão'].forEach(t=>{
-    const lista=jogadores.filter(j=>j.time===t);
+    const lista=jogadores.filter(j=>j.time===t).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     if(!lista.length)return;
     const cc=t==='Invasão'?'inv':'ter';
-    let h=`<div class="escal-section">
-      <div class="escal-title ${cc}">${t.toUpperCase()}</div>
-      <div class="escal-grid">`;
-    lista.forEach(j=>{
-      const v=escFreq[j.firestoreId];
-      const sy=v===true?'active-yes':'', sn=v===false?'active-no':'';
-      h+=`<div class="escal-player">
-        <span class="escal-name">${j.nome}</span>
-        <div class="escal-toggle">
-          <button type="button" class="toggle-btn ${sy}" onclick="marcarFreq('${j.firestoreId}',true)" title="Jogou">✅</button>
-          <button type="button" class="toggle-btn ${sn}" onclick="marcarFreq('${j.firestoreId}',false)" title="Não jogou">❌</button>
-        </div>
-      </div>`;
+    const mid=Math.ceil(lista.length/2);
+    const col1=lista.slice(0,mid), col2=lista.slice(mid);
+    const interleaved=[];
+    for(let i=0;i<mid;i++){if(col1[i])interleaved.push(col1[i]);if(col2[i])interleaved.push(col2[i]);}
+    let h=`<div class="escal-section"><div class="escal-title ${cc}">${t.toUpperCase()}</div><div class="escal-grid">`;
+    interleaved.forEach(j=>{
+      const escalado=escFreq[j.firestoreId]===true;
+      h+=`<div class="escal-player"><span class="escal-name">${j.nome}</span>`;
+      h+=`<button type="button" class="toggle-btn-single ${escalado?'escal-on':'escal-off'}" onclick="marcarFreq('${j.firestoreId}',${!escalado})">${escalado?'✅':'❌'}</button>`;
+      h+=`</div>`;
     });
     h+=`</div></div>`;
     area.innerHTML+=h;
   });
 }
 window.marcarFreq=(fid,valor)=>{
-  escFreq[fid]=escFreq[fid]===valor?null:valor; // toggle
+  escFreq[fid]=valor?true:null;
   renderEscalacao();
+  carregarInputsGoleiros(); // sem args = sempre aplica regra automática
 };
 
-// ── GOLEIROS EM CAMPO ─────────────────────────────────────────────────
-function carregarInputsGoleiros(golInfoExistente=[]){
+// Helper: coleta goleiros_info atual dos inputs
+function coletarGoleirosInfo(){
+  const info=[];
+  document.querySelectorAll('.g-tempo').forEach(sel=>{
+    const tid=sel.dataset.id, tempo=parseFloat(sel.value);
+    const sofEl=document.querySelector(`.g-sofridos[data-id="${tid}"]`);
+    const gols=sofEl?(parseInt(sofEl.value)||0):0;
+    if(tempo>0)info.push({jogadorId:tid,tempo,gols});
+  });
+  return info;
+}
+
+function carregarInputsGoleiros(golInfoSalva=[]){
+  // golInfoSalva: dados vindos do Firestore (edição) — NÃO usa coletarGoleirosInfo aqui
   const area=document.getElementById('goleiros-inputs-area');
   if(!area)return;
   area.innerHTML='';
   ['Invasão','Terrão'].forEach(t=>{
-    const gols=jogadores.filter(j=>j.time===t&&j.posicao==='G');
+    const todosGols=jogadores.filter(j=>j.time===t&&j.posicao==='G');
+    const escalados=todosGols.filter(g=>escFreq[g.firestoreId]===true);
+    if(!escalados.length)return;
     const cor=t==='Invasão'?'cor-invasao':'cor-terrao';
+    // Regra: 1 escalado = jogo inteiro; 2+ escalados = meio jogo para TODOS
+    const tempoAuto=escalados.length===1?1:0.5;
     let h=`<div class="gol-card"><div class="gol-card-header ${cor}">${t}</div>`;
-    if(!gols.length){h+=`<div style="color:#bbb;font-size:.85rem;padding:4px 0">Nenhum goleiro</div>`;}
-    else{
-      gols.forEach(g=>{
-        const ex=golInfoExistente.find(x=>x.jogadorId===g.firestoreId);
-        h+=`<div class="gol-row-item">
-          <div class="gol-row-name">${g.nome}</div>
-          <div class="gol-row-inputs">
-            <div><label class="form-label">Tempo</label>
-              <select class="g-tempo form-input" data-id="${g.firestoreId}" style="padding:10px 8px">
-                <option value="0" ${!ex?'selected':''}>Não jogou</option>
-                <option value="0.5" ${ex?.tempo===.5?'selected':''}>Meio jogo</option>
-                <option value="1" ${ex?.tempo===1?'selected':''}>Jogo inteiro</option>
-              </select></div>
-            <div><label class="form-label">Gols sofridos</label>
-              <input type="number" class="g-sofridos form-input" data-id="${g.firestoreId}"
-                placeholder="0" min="0" value="${ex?.gols??''}"></div>
-          </div></div>`;
-      });
-    }
-    h+=`</div>`; area.innerHTML+=h;
+    escalados.forEach(g=>{
+      const ex=golInfoSalva.find(x=>x.jogadorId===g.firestoreId);
+      // Se veio do Firestore usa o valor salvo, senão aplica regra automática
+      const tempoVal=(ex&&ex.tempo!==undefined)?ex.tempo:tempoAuto;
+      const golsVal=(ex&&ex.gols!==undefined)?ex.gols:'';
+      h+=`<div class="gol-row-item">
+        <div class="gol-row-name">${g.nome}</div>
+        <div class="gol-row-inputs">
+          <div><label class="form-label">Tempo</label>
+            <select class="g-tempo form-input" data-id="${g.firestoreId}" style="padding:10px 8px">
+              <option value="0" ${tempoVal===0?'selected':''}>Não jogou</option>
+              <option value="0.5" ${tempoVal===0.5?'selected':''}>Meio jogo</option>
+              <option value="1" ${tempoVal===1?'selected':''}>Jogo inteiro</option>
+            </select></div>
+          <div><label class="form-label">Gols sofridos</label>
+            <input type="number" class="g-sofridos form-input" data-id="${g.firestoreId}"
+              placeholder="0" min="0" value="${golsVal}"></div>
+        </div></div>`;
+    });
+    h+=`</div>`;
+    area.innerHTML+=h;
   });
 }
 
@@ -993,10 +1020,18 @@ function renderResultados(){
     <button class="btn-mini" onclick="editRodada('${fid}')">✏️</button>
     <button class="btn-mini" onclick="delRodada('${fid}')">🗑️</button></div>`:'';
   const build=r=>{
-    const invVenceu=r.p_inv>=r.p_ter, empate=r.p_inv===r.p_ter;
-    const t1n=invVenceu?'Invasão':'Terrão', t2n=invVenceu?'Terrão':'Invasão';
-    const t1s=invVenceu?r.p_inv:r.p_ter,   t2s=invVenceu?r.p_ter:r.p_inv;
-    const t1c=invVenceu?'cor-invasao':'cor-terrao', t2c=invVenceu?'cor-terrao':'cor-invasao';
+    const empate=r.p_inv===r.p_ter;
+    const invVenceu=r.p_inv>r.p_ter;
+    // Vencedor sempre primeiro
+    const t1n=invVenceu?'Invasão':(empate?'Invasão':'Terrão');
+    const t2n=invVenceu?'Terrão':(empate?'Terrão':'Invasão');
+    const t1s=t1n==='Invasão'?r.p_inv:r.p_ter;
+    const t2s=t2n==='Invasão'?r.p_inv:r.p_ter;
+    const t1c=t1n==='Invasão'?'cor-invasao':'cor-terrao';
+    const t2c=t2n==='Invasão'?'cor-invasao':'cor-terrao';
+    // Cor dos quadrados: sempre a cor do time. Empate = cinza
+    const bg1=empate?'#aaa':(t1n==='Invasão'?'var(--invasao)':'var(--terrao)');
+    const bg2=empate?'#aaa':(t2n==='Invasão'?'var(--invasao)':'var(--terrao)');
     return`<div class="resultado-item">
       <div class="res-top">
         <span class="res-round">Rodada ${r.num} — ${fmtData(r.data)}${empate?' · EMPATE':''}</span>
@@ -1004,9 +1039,9 @@ function renderResultados(){
       </div>
       <div class="res-placar">
         <span class="res-team ${t1c}">${t1n}</span>
-        <span class="res-score" style="${!empate?'background:var(--accent)':''}">${t1s}</span>
+        <span class="res-score" style="background:${bg1};color:white">${t1s}</span>
         <span class="res-x">x</span>
-        <span class="res-score">${t2s}</span>
+        <span class="res-score" style="background:${bg2};color:white">${t2s}</span>
         <span class="res-team ${t2c}">${t2n}</span>
       </div>
     </div>`;
