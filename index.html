@@ -981,29 +981,49 @@ function renderArtilharia(){
 }
 
 function renderGoleiros(){
+  // Acumula jogos (tempo) e gols sofridos por goleiro
   let gst={};
   rodadas.forEach(r=>r.goleiros_info.forEach(gi=>{
     if(!gst[gi.jogadorId])gst[gi.jogadorId]={t:0,g:0};
     gst[gi.jogadorId].t+=gi.tempo; gst[gi.jogadorId].g+=gi.gols;
   }));
+
+  // Total de rodadas para calcular % de escalação
+  const totalRodadas=rodadas.length;
+
   const lista=Object.keys(gst).map(id=>{
     const j=jogadores.find(x=>x.firestoreId===id);
-    const m=gst[id].t>0?gst[id].g/gst[id].t:0;
-    return{nome:j?.nome||'?',time:j?.time||'?',jogos:gst[id].t,gols:gst[id].g,media:m};
-  }).sort((a,b)=>{
-    if(b.jogos!==a.jogos)return b.jogos-a.jogos; // mais jogos primeiro
-    return a.media-b.media;                      // menor média depois
+    const media=gst[id].t>0?gst[id].g/gst[id].t:0;
+    // % escalação: quantas rodadas o goleiro teve tempo > 0 (jogou) / total rodadas
+    const rodadasJogou=gst[id].t; // cada jogo inteiro=1, meio=0.5 — usamos contagem de rodadas com presença
+    // Conta rodadas em que apareceu (tempo > 0 já está acumulado acima como soma de tempos)
+    // Para % correto: conta rodadas individuais em que jogou
+    let rodadasPresente=0;
+    rodadas.forEach(r=>{
+      const gi=r.goleiros_info.find(x=>x.jogadorId===id);
+      if(gi&&gi.tempo>0)rodadasPresente++;
+    });
+    const pctEscalacao=totalRodadas>0?(rodadasPresente/totalRodadas)*100:0;
+    return{id,nome:j?.nome||'?',time:j?.time||'?',jogos:gst[id].t,gols:gst[id].g,media,pctEscalacao};
   });
+
+  // Grupo A: ≥50% escalação — ordenado por menor média, desempate por nome
+  const grupoA=lista.filter(l=>l.pctEscalacao>=50).sort((a,b)=>a.media-b.media||a.nome.localeCompare(b.nome));
+  // Grupo B: <50% escalação — ordenado por menor média, desempate por nome
+  const grupoB=lista.filter(l=>l.pctEscalacao<50).sort((a,b)=>a.media-b.media||a.nome.localeCompare(b.nome));
+  const ordenada=[...grupoA,...grupoB];
+
   const el=document.getElementById('body-gol');
-  if(!lista.length){el.innerHTML='<div class="empty">Nenhum goleiro registrado</div>';return;}
-  el.innerHTML=lista.map((l,i)=>{
+  if(!ordenada.length){el.innerHTML='<div class="empty">Nenhum goleiro registrado</div>';return;}
+  el.innerHTML=ordenada.map((l,i)=>{
     const cor=l.time==='Invasão'?'cor-invasao':'cor-terrao';
     const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    return`<div class="stat-row">
-      <div class="stat-rank ${rc}">${i+1}</div>
+    const fora=l.pctEscalacao<50;
+    return`<div class="stat-row" ${fora?'style="opacity:0.6"':''}>
+      <div class="stat-rank ${fora?'':rc}">${fora?'—':i+1}</div>
       <div class="stat-info">
         <div class="stat-name ${cor}">${l.nome}</div>
-        <div class="stat-sub">${l.time}</div>
+        <div class="stat-sub">${l.time} · ${Math.round(l.pctEscalacao)}% escalado</div>
       </div>
       <div class="stat-values">
         <div class="stat-val"><div class="stat-val-num">${l.jogos}</div><div class="stat-val-label">Jogos</div></div>
